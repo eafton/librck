@@ -1,0 +1,19 @@
+Intended to be an "implementation detail" for SDL3 that implements various *NIX functionalities without inflating the main SDL3 library.
+Its primarily designed to avoid GLib/GObject solely due to state corruption and symbol conflict issues.
+MIT licensed but dynamically links to libraries with other FOSS licenses like ding-libs (ini_config), NSPR4 and Pixman.
+
+Implements:
+-Pixman XPM1/XPM2/XPM2 loader
+-Pixman SVG loader (PlutoSVG wrapper)
+-Pixman PNG codec (spng wrapper)
+-XDG Base Directory API
+-XDG Icon Theme API (icon filename lookup, loading icons as Pixman images, theme enumeration, fallback icon generation)
+
+Planned:
+-GIO style "get icon representation of a file system object" API
+-Fallback "Unicode" text renderer (built in bitmap font)
+-Unicode text renderer (wrapper around FreeType2 +FontConfig + HarfBuzz ala libfcft)
+-Move the fallback toolkit (SDL3 PR #15375, rewrite of X11TK) into here
+-Toolkit wrapper around the fallback one, sandboxed (fork() + dynamic loading + IPC SHM, for avoiding GLib/GObject issues) GTK2/3/4  
+ and sandboxed Qt (seperate library that will provide basic C API for Qt5/Qt6/TQt functions)
+-Minimal embedded Wayland compositor for embedding GTK/Qt menubars into SDL safely
