@@ -32,6 +32,14 @@ PRBool rck_strprefix(const char *string, const char *prefix) {
 	return PR_FALSE;
 }
 
+PRBool rck_strcaseprefix(const char *string, const char *prefix) {
+	if (!PL_strncasecmp(prefix, string, strlen(prefix))) {
+		return PR_TRUE;
+	} 
+	
+	return PR_FALSE;
+}
+
 void rck_free(void *ptr) {
 	free(ptr);
 }

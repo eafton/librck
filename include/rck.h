@@ -27,6 +27,7 @@ RCK_EXPORT void rck_deinit(void);
 RCK_EXPORT void rck_free(void *ptr);
 RCK_EXPORT PRBool rck_strprefix(const char *string, const char *prefix);
 RCK_EXPORT PRBool rck_strsuffix(const char *string, const char *suffix);
+RCK_EXPORT PRBool rck_strcaseprefix(const char *string, const char *prefix);
 #define rck_isdigit_ascii(c) ((c) >= '0' && (c) <= '9')
 #define rck_isletter_ascii(c) ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
 #define RCK_PR_CLIST_ENTRY(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
@@ -135,10 +136,80 @@ RCK_EXPORT const char *rck_xdg_icon_theme_lookup_icon(RCKXDGIconTheme *theme, co
 RCK_EXPORT pixman_image_t *rck_xdg_icon_theme_load_icon(RCKXDGIconTheme *theme, const char *name, unsigned int size, unsigned int scale);
 #define rck_xdg_icon_theme_free_icon_path(x) PL_strfree((char*)x)
 
+/* DESKTOP SETTINGS */
+typedef struct _RCKDesktopSettings RCKDesktopSettings;
+
+typedef enum {
+	RCK_DESKTOP_SETTINGS_BACKEND_UNKNOWN,
+	RCK_DESKTOP_SETTINGS_BACKEND_XSETTINGS,
+	RCK_DESKTOP_SETTINGS_BACKEND_PORTAL
+} RCKDesktopSettingsBackend;
+
+typedef enum {
+	RCK_DESKTOP_SETTING_THEME_UNKNOWN,
+	RCK_DESKTOP_SETTING_THEME_LIGHT,
+	RCK_DESKTOP_SETTING_THEME_DARK
+} RCKDesktopSettingTheme;
+
+typedef enum {
+	RCK_DESKTOP_SETTING_CONTRAST_UNKNOWN,
+	RCK_DESKTOP_SETTING_CONTRAST_STANDARD,
+	RCK_DESKTOP_SETTING_CONTRAST_HIGHER,
+	RCK_DESKTOP_SETTING_CONTRAST_LOWER
+} RCKDesktopSettingContrast;
+
+typedef enum {
+	RCK_DESKTOP_SETTING_DEFAULTABLE_BOOL_UNKNOWN,
+	RCK_DESKTOP_SETTING_DEFAULTABLE_BOOL_DEFAULT,
+	RCK_DESKTOP_SETTING_DEFAULTABLE_BOOL_OFF,
+	RCK_DESKTOP_SETTING_DEFAULTABLE_BOOL_ON
+} RCKDesktopSettingDefaultableBool;
+
+typedef enum {
+	RCK_DESKTOP_SETTING_TEXT_HINTING_STYLE_UNKNOWN,
+	RCK_DESKTOP_SETTING_TEXT_HINTING_STYLE_NONE,
+	RCK_DESKTOP_SETTING_TEXT_HINTING_STYLE_SLIGHT,
+	RCK_DESKTOP_SETTING_TEXT_HINTING_STYLE_MEDIUM,
+	RCK_DESKTOP_SETTING_TEXT_HINTING_STYLE_FULL,
+} RCKDesktopSettingTextHintingStyle;
+
+typedef enum {
+	RCK_DESKTOP_SETTING_TEXT_SUBPIXEL_UNKNOWN,
+	RCK_DESKTOP_SETTING_TEXT_SUBPIXEL_NONE,
+	RCK_DESKTOP_SETTING_TEXT_SUBPIXEL_RGB,
+	RCK_DESKTOP_SETTING_TEXT_SUBPIXEL_BGR,
+	RCK_DESKTOP_SETTING_TEXT_SUBPIXEL_VRGB,
+	RCK_DESKTOP_SETTING_TEXT_SUBPIXEL_VBGR
+} RCKDesktopSettingTextSubpixel;
+
+typedef enum {
+	RCK_DESKTOP_SETTING_UNKNOWN,
+	RCK_DESKTOP_SETTING_THEME,
+	RCK_DESKTOP_SETTING_CONTRAST,
+	RCK_DESKTOP_SETTING_TEXT_DPI,
+	RCK_DESKTOP_SETTING_TEXT_AA,
+	RCK_DESKTOP_SETTING_TEXT_HINTING,
+	RCK_DESKTOP_SETTING_TEXT_HINTING_STYLE,
+	RCK_DESKTOP_SETTING_TEXT_SUBPIXEL,
+	RCK_DESKTOP_SETTING_TEXT_FONT,
+	RCK_DESKTOP_SETTING_ICON_THEME
+} RCKDesktopSetting;
+
+typedef void (*RCKDesktopSettingListener)(RCKDesktopSettings *, RCKDesktopSetting, void *);
+
+RCK_EXPORT RCKDesktopSettings *rck_desktop_settings_new(void);
+RCK_EXPORT RCKDesktopSettingsBackend rck_desktop_settings_get_backend(RCKDesktopSettings *setiings);
+RCK_EXPORT PRBool rck_desktop_settings_get_value(RCKDesktopSettings *setiings, RCKDesktopSetting setting, ...);
+RCK_EXPORT PRBool rck_desktop_settings_get_value_va_list(RCKDesktopSettings *setiings, RCKDesktopSetting setting, va_list va);
+RCK_EXPORT PRBool rck_desktop_settings_add_change_listener(RCKDesktopSettings *setiings, RCKDesktopSettingListener listener, void *udata);
+RCK_EXPORT PRBool rck_desktop_settings_remove_change_listener(RCKDesktopSettings *setiings, RCKDesktopSettingListener listener, void *udata);
+RCK_EXPORT void rck_desktop_settings_pump_events(RCKDesktopSettings *setiings);
+RCK_EXPORT void rck_desktop_settings_destroy(RCKDesktopSettings *setiings);
+
 /* TODO: GIO-like filesystem object icon getter */
 /* TODO: Move fallback toolkit PR into here */
 /* TODO: Metatoolkit (QT/GTK/Fallback) wrapper */
-/* TODO: Wayland compositor for embedding GTK/Qt menus into SDL? :) */
+/* TODO: Wayland compositor for embedding GTK/Qt menus into SDL? */
 
 #ifdef __cplusplus
 }

@@ -8,8 +8,10 @@ Implements:
 -Pixman PNG codec (spng wrapper)
 -XDG Base Directory API
 -XDG Icon Theme API (icon filename lookup, loading icons as Pixman images, theme enumeration, fallback icon generation)
+-Desktop Settings API (supports both XDG Portals and XSettings)
 
 Planned:
+-Documentation
 -GIO style "get icon representation of a file system object" API
 -Fallback "Unicode" text renderer (built in bitmap font)
 -Unicode text renderer (wrapper around FreeType2 +FontConfig + HarfBuzz ala libfcft)
