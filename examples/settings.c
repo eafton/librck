@@ -1,11 +1,9 @@
 #include <rck.h>
 
 int main(int argc, char **argp) {
-	RCKDesktopSettings *settings;
-	char *text;
+	XCKXDGUDCache *c;
 	
-	settings = rck_desktop_settings_new();
-	rck_desktop_settings_destroy(settings);
+	c = rck_xdg_ud_cache_new(NULL);
 	
 	return 0;
 }

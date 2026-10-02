@@ -28,8 +28,12 @@ RCK_EXPORT void rck_free(void *ptr);
 RCK_EXPORT PRBool rck_strprefix(const char *string, const char *prefix);
 RCK_EXPORT PRBool rck_strsuffix(const char *string, const char *suffix);
 RCK_EXPORT PRBool rck_strcaseprefix(const char *string, const char *prefix);
+RCK_EXPORT PRBool rck_strcasesuffix(const char *string, const char *suffix);
+RCK_EXPORT char *rck_expandenv(const char *src);
+#define rck_expandenv_free(x) PR_Free(x)
 #define rck_isdigit_ascii(c) ((c) >= '0' && (c) <= '9')
 #define rck_isletter_ascii(c) ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+#define rck_isalnum_ascii(c) (((c) >= '0' && (c) <= '9') || ((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
 #define RCK_PR_CLIST_ENTRY(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
 
 /* XPM LOADER */
@@ -135,6 +139,7 @@ RCK_EXPORT RCKXDGIconThemeLocation rck_xdg_icon_theme_get_location(RCKXDGIconThe
 RCK_EXPORT const char *rck_xdg_icon_theme_lookup_icon(RCKXDGIconTheme *theme, const char *name, unsigned int size, unsigned int scale);
 RCK_EXPORT pixman_image_t *rck_xdg_icon_theme_load_icon(RCKXDGIconTheme *theme, const char *name, unsigned int size, unsigned int scale);
 #define rck_xdg_icon_theme_free_icon_path(x) PL_strfree((char*)x)
+#define rck_xdg_icon_theme_free_string_localizations(x) rck_free(x)
 
 /* DESKTOP SETTINGS */
 typedef struct _RCKDesktopSettings RCKDesktopSettings;
@@ -205,8 +210,37 @@ RCK_EXPORT PRBool rck_desktop_settings_add_change_listener(RCKDesktopSettings *s
 RCK_EXPORT PRBool rck_desktop_settings_remove_change_listener(RCKDesktopSettings *setiings, RCKDesktopSettingListener listener, void *udata);
 RCK_EXPORT void rck_desktop_settings_pump_events(RCKDesktopSettings *setiings);
 RCK_EXPORT void rck_desktop_settings_destroy(RCKDesktopSettings *setiings);
+#define rck_desktop_settings_free_string_value(x) PL_strfree((char*)x)
 
-/* TODO: GIO-like filesystem object icon getter */
+/* XDG USER DIRECTORIES */
+typedef struct _RCKXDGUDCache XCKXDGUDCache;
+
+typedef enum {
+	RCK_XDG_UD_DESKTOP = 0,
+	RCK_XDG_UD_DOCUMENTS,
+	RCK_XDG_UD_DOWNLOADS,
+	RCK_XDG_UD_MUSIC,
+	RCK_XDG_UD_PICTURES,
+	RCK_XDG_UD_PROJECTS,
+	RCK_XDG_UD_PUBLICSHARE,
+	RCK_XDG_UD_TEMPLATES,
+	RCK_XDG_UD_VIDEOS,
+	RCK_XDG_UD_DIRECTORY_COUNT,
+	RCK_XDG_UD_INVALID,
+} RCKXDGUDDirectory;
+
+RCK_EXPORT XCKXDGUDCache *rck_xdg_ud_cache_new(RCKXDGBDCache *bdcache);
+RCK_EXPORT const char *rck_xdg_ud_cache_get_path(XCKXDGUDCache *cache, RCKXDGUDDirectory dir);
+RCK_EXPORT RCKXDGUDDirectory rck_xdg_ud_cache_get_directory_of_path(XCKXDGUDCache *cache, const char *path);
+RCK_EXPORT void rck_xdg_ud_cache_destroy(XCKXDGUDCache *cache);
+
+/* FILE SYSTEM TODO: NEEDS IMPL */
+typedef struct _RCKFSManager RCKFSManager;
+
+RCK_EXPORT RCKFSManager *rck_fs_manager_new(RCKXDGBDCache *bdcache, XCKXDGUDCache* udcache);
+RCK_EXPORT pixman_image_t *rck_fs_manager_get_icon_for_path(RCKFSManager *fsmanager, RCKXDGIconTheme *theme, const char *path, unsigned int size, unsigned int scale);
+RCK_EXPORT void rck_fs_manager_destroy(RCKFSManager *fsmanager);
+
 /* TODO: Move fallback toolkit PR into here */
 /* TODO: Metatoolkit (QT/GTK/Fallback) wrapper */
 /* TODO: Wayland compositor for embedding GTK/Qt menus into SDL? */

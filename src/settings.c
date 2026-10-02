@@ -65,9 +65,6 @@ typedef struct {
 #define PORTAL_NS_KDE_GENERAL "org.kde.kdeglobals.General"
 #define PORTAL_NS_KDE_ICONS "org.kde.kdeglobals.Icons"
 #define PORTAL_MATCH_RULE "type='signal',interface='"SIGNAL_INTERFACE"',member='"SIGNAL_NAME"'"
-#define PORTAL_TIMEOUT_MS 500
-#define PORTAL_BASE_DPI 96
-#define PORTAL_DPI_UNIT 1024
 
 RCKDesktopSettingsBackend rck_desktop_settings_get_backend(RCKDesktopSettings *setiings) {
 	if (setiings) {
@@ -320,24 +317,6 @@ static void xsettings_backend_destroy(RCKDesktopSettings *s) {
 	PR_Free(xs);
 }
 
-static PRBool is_dark(const char *n) {
-	const char *s;
-    size_t len;
-    
-    len = strlen(n);
-    
-	if (len < 4) {
-        return PR_FALSE;
-    }
-
-    s = n + (len - 4);
-    if (!PL_strcasecmp(s, "dark")) {
-        return PR_TRUE;
-    }
-
-    return PR_FALSE;
-}
-
 static PRBool xsettings_backend_get(RCKDesktopSettings *s, RCKDesktopSetting k, va_list va) {
 	RCKDesktopSettingsXSettings *xs;
 	XSettingsSetting *setting;
@@ -356,7 +335,7 @@ static PRBool xsettings_backend_get(RCKDesktopSettings *s, RCKDesktopSetting k, 
 					
 					p = vp;
 					if (p && setting && setting->type == XSETTINGS_TYPE_INT) {
-						*p = setting->data.v_int;
+						*p = setting->data.v_int/1024;
 					}
 					ixsettings_setting_free(setting);
 					return PR_TRUE;
@@ -468,7 +447,7 @@ static PRBool xsettings_backend_get(RCKDesktopSettings *s, RCKDesktopSetting k, 
 			
 			p = vp;
 			if (p && setting && setting->type == XSETTINGS_TYPE_STRING) {
-				if (is_dark(setting->data.v_string)) {
+				if (!rck_strcasesuffix(setting->data.v_string, "dark")) {
 					*p = RCK_DESKTOP_SETTING_THEME_DARK;
 				} else {
 					*p = RCK_DESKTOP_SETTING_THEME_LIGHT;
@@ -680,7 +659,7 @@ static PRBool portal_read(DBusConnection *conn, const char *ns, const char *key,
 	}
 
 	dbus_error_init(&error);
-	reply = dbus_connection_send_with_reply_and_block(conn, msg, PORTAL_TIMEOUT_MS, &error);
+	reply = dbus_connection_send_with_reply_and_block(conn, msg, 500, &error);
 	dbus_message_unref(msg);
 	if (dbus_error_is_set(&error)) {
 		dbus_error_free(&error);
@@ -817,6 +796,7 @@ static char *font_qt_to_pango(const char *str) {
 	char *p;
 	char *end;
 	char *res;
+	char *o;
 	const char *wname;
 	const char *sname;
 	PRFloat64 size;
@@ -894,7 +874,10 @@ static char *font_qt_to_pango(const char *str) {
 		res = PR_smprintf("%s%s%s%s%s", fields[0], wname[0] ? " " : "", wname, sname[0] ? " " : "", sname);
 	}
 
-	PR_Free(buf);
+	o = res;
+	res = PL_strdup(res);
+	PR_smprintf_free(o);
+	PL_strfree(buf);
 	return res;
 }
 
@@ -977,13 +960,13 @@ static PRBool portal_get_theme(DBusConnection *c, RCKDesktopSettingTheme *out) {
 	}
 
 	if (portal_read_string(c, PORTAL_NS_GNOME, "gtk-theme", &v)) {
-		*out = is_dark(v.s) ? RCK_DESKTOP_SETTING_THEME_DARK : RCK_DESKTOP_SETTING_THEME_LIGHT;
+		*out = (!rck_strcasesuffix(v.s, "dark")) ? RCK_DESKTOP_SETTING_THEME_DARK : RCK_DESKTOP_SETTING_THEME_LIGHT;
 		pv_clear(&v);
 		return PR_TRUE;
 	}
 
 	if (portal_read_string(c, PORTAL_NS_KDE_GENERAL, "ColorScheme", &v)) {
-		*out = is_dark(v.s) ? RCK_DESKTOP_SETTING_THEME_DARK : RCK_DESKTOP_SETTING_THEME_LIGHT;
+		*out = (!rck_strcasesuffix(v.s, "dark")) ? RCK_DESKTOP_SETTING_THEME_DARK : RCK_DESKTOP_SETTING_THEME_LIGHT;
 		pv_clear(&v);
 		return PR_TRUE;
 	}
@@ -1051,7 +1034,7 @@ static PRBool portal_get_dpi(DBusConnection *c, int *out) {
 	ok = PR_FALSE;
 	if (portal_read(c, PORTAL_NS_GNOME, "text-scaling-factor", &v)) {
 		if (pv_to_double(&v, &f) && f > 0) {
-			*out = (int)(f * PORTAL_BASE_DPI * PORTAL_DPI_UNIT + 0.5);
+			*out = (int)(f * 96 + 0.5);
 			ok = PR_TRUE;
 		}
 		pv_clear(&v);
@@ -1062,7 +1045,7 @@ static PRBool portal_get_dpi(DBusConnection *c, int *out) {
 
 	if (portal_read(c, PORTAL_NS_KDE_GENERAL, "forceFontDPI", &v)) {
 		if (pv_to_int(&v, &n) && n > 0) {
-			*out = (int)n * PORTAL_DPI_UNIT;
+			*out = (int)n;
 			ok = PR_TRUE;
 		}
 		pv_clear(&v);
@@ -1167,7 +1150,7 @@ static PRBool portal_get_font(DBusConnection *c, char **out) {
 	char *font;
 
 	if (portal_read_string(c, PORTAL_NS_GNOME, "font-name", &v)) {
-		*out = v.s;
+		*out = PL_strdup(v.s);
 		v.s = NULL;
 		return PR_TRUE;
 	}
@@ -1188,7 +1171,7 @@ static PRBool portal_get_icon_theme(DBusConnection *c, char **out) {
 	PortalValue v;
 
 	if (portal_read_string(c, PORTAL_NS_GNOME, "icon-theme", &v) || portal_read_string(c, PORTAL_NS_KDE_ICONS, "Theme", &v)) {
-		*out = v.s;
+		*out = PL_strdup(v.s);
 		v.s = NULL;
 		return PR_TRUE;
 	}

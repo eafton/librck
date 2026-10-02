@@ -69,3 +69,94 @@ PRBool rck_strsuffix(const char *string, const char *suffix) {
 	return PR_FALSE;
 }
 
+PRBool rck_strcasesuffix(const char *string, const char *suffix) {
+    size_t string_len, suffix_len;
+    
+    string_len = strlen(string);
+    suffix_len = strlen(suffix);
+    
+    if (suffix_len > string_len) {
+        return PR_FALSE;
+    }
+    
+	if (!PL_strcasecmp(string + (string_len - suffix_len), suffix)) {
+		return PR_TRUE;
+	}
+	
+	return PR_FALSE;
+}
+
+char *rck_expandenv(const char *src) {
+	const char *p;
+	char *dst;
+    size_t cap;
+    size_t len;
+
+	cap = 256;
+	len = 0;
+    if (!src) {
+		return NULL;
+	}
+
+    dst = PR_Malloc(cap);
+    if (!dst) {
+		return NULL;
+	}
+	
+    p = src;
+    while (*p) {
+        if (*p == '$') {
+            const char *start;
+            size_t name_len;
+            
+            p++;
+            start = p;
+            
+            while (*p && (rck_isalnum_ascii((unsigned char)*p) || *p == '_')) {
+                p++;
+            }
+            
+            name_len = p - start;
+            if (name_len > 0) {
+                char var_name[256];
+                
+                if (name_len < sizeof(var_name)) {
+					const char *val;
+					
+                    memcpy(var_name, start, name_len);
+                    var_name[name_len] = '\0';
+
+                    val = PR_GetEnv(var_name);
+                    if (val) {
+                        size_t val_len;
+                        
+						val_len = strlen(val);
+                        while (len + val_len >= cap) {
+                            cap *= 2;
+                            dst = PR_Realloc(dst, cap);
+                            if (!dst) {
+								 return NULL;
+							}
+                        }
+                        memcpy(dst + len, val, val_len);
+                        len += val_len;
+                    }
+                }
+                continue; 
+            } else {
+                p--; 
+            }
+        }
+        if (len + 1 >= cap) {
+            cap *= 2;
+			dst = PR_Realloc(dst, cap);
+			if (!dst) {
+				return NULL;
+			}
+        }
+        dst[len++] = *p++;
+    }
+
+    dst[len] = '\0';
+    return dst;
+}
