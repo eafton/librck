@@ -7,6 +7,7 @@
 #include <plhash.h>
 #include "rck.h"
 #include "rckpriv.h"
+#define compare_uint32 irck_compare_uint32
 
 /* XPM1/XPM2/XPM3 parser for the XDG icon theme implementation */
 /* It is not meant to be fast, its just meant to parse most "modern" XPM files that some XDG icon themes may include or applications might put in the hicolor theme. */
@@ -53,7 +54,7 @@ typedef struct {
 
 PLHashTable *x11_color_table;
 
-static PRIntn PR_CALLBACK compare_uint32(const void *v1, const void *v2) {
+PRIntn PR_CALLBACK irck_compare_uint32(const void *v1, const void *v2) {
 	if ((*(PRUint32*)v1) == (*(PRUint32*)v2)) {
 		return 1;
 	}

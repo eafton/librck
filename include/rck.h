@@ -137,7 +137,7 @@ RCK_EXPORT const char *rck_xdg_icon_theme_get_string(RCKXDGIconTheme *theme, RCK
 RCK_EXPORT PRBool rck_xdg_icon_theme_get_bool(RCKXDGIconTheme *theme, RCKXDGIconThemeBool bl, PRBool *ret);
 RCK_EXPORT RCKXDGIconThemeLocation rck_xdg_icon_theme_get_location(RCKXDGIconTheme *theme);
 RCK_EXPORT const char *rck_xdg_icon_theme_lookup_icon(RCKXDGIconTheme *theme, const char *name, unsigned int size, unsigned int scale);
-RCK_EXPORT pixman_image_t *rck_xdg_icon_theme_load_icon(RCKXDGIconTheme *theme, const char *name, unsigned int size, unsigned int scale);
+RCK_EXPORT pixman_image_t *rck_xdg_icon_theme_load_icon(RCKXDGIconTheme *theme, const char *name, unsigned int size, unsigned int scale, PRBool missing_image);
 #define rck_xdg_icon_theme_free_icon_path(x) PL_strfree((char*)x)
 #define rck_xdg_icon_theme_free_string_localizations(x) rck_free(x)
 
@@ -213,7 +213,7 @@ RCK_EXPORT void rck_desktop_settings_destroy(RCKDesktopSettings *setiings);
 #define rck_desktop_settings_free_string_value(x) PL_strfree((char*)x)
 
 /* XDG USER DIRECTORIES */
-typedef struct _RCKXDGUDCache XCKXDGUDCache;
+typedef struct _RCKXDGUDCache RCKXDGUDCache;
 
 typedef enum {
 	RCK_XDG_UD_DESKTOP = 0,
@@ -229,17 +229,29 @@ typedef enum {
 	RCK_XDG_UD_INVALID,
 } RCKXDGUDDirectory;
 
-RCK_EXPORT XCKXDGUDCache *rck_xdg_ud_cache_new(RCKXDGBDCache *bdcache);
-RCK_EXPORT const char *rck_xdg_ud_cache_get_path(XCKXDGUDCache *cache, RCKXDGUDDirectory dir);
-RCK_EXPORT RCKXDGUDDirectory rck_xdg_ud_cache_get_directory_of_path(XCKXDGUDCache *cache, const char *path);
-RCK_EXPORT void rck_xdg_ud_cache_destroy(XCKXDGUDCache *cache);
+RCK_EXPORT RCKXDGUDCache *rck_xdg_ud_cache_new(RCKXDGBDCache *bdcache);
+RCK_EXPORT const char *rck_xdg_ud_cache_get_path(RCKXDGUDCache *cache, RCKXDGUDDirectory dir);
+RCK_EXPORT RCKXDGUDDirectory rck_xdg_ud_cache_get_directory_of_path(RCKXDGUDCache *cache, const char *path);
+RCK_EXPORT void rck_xdg_ud_cache_destroy(RCKXDGUDCache *cache);
 
-/* FILE SYSTEM TODO: NEEDS IMPL */
+/* FILE SYSTEM */
 typedef struct _RCKFSManager RCKFSManager;
 
-RCK_EXPORT RCKFSManager *rck_fs_manager_new(RCKXDGBDCache *bdcache, XCKXDGUDCache* udcache);
-RCK_EXPORT pixman_image_t *rck_fs_manager_get_icon_for_path(RCKFSManager *fsmanager, RCKXDGIconTheme *theme, const char *path, unsigned int size, unsigned int scale);
-RCK_EXPORT void rck_fs_manager_destroy(RCKFSManager *fsmanager);
+RCK_EXPORT RCKFSManager *rck_fs_manager_new(RCKXDGBDCache *bdcache, RCKXDGUDCache* udcache);
+RCK_EXPORT pixman_image_t *rck_fs_manager_get_icon_for_path(RCKFSManager *fsmanager, RCKXDGIconTheme *theme, const char *path, unsigned int size, unsigned int scale); /* NOT IMPLEMENTED */
+RCK_EXPORT void rck_fs_manager_destroy(RCKFSManager *fso);
+
+/* FALLBACK TEXT RENDERING */
+typedef struct {
+	size_t sz;
+	pixman_image_t *pix;
+	int w, h, xadvance, yadvance;
+} RCKFallbackGlyph;
+
+RCK_EXPORT int rck_fallback_text_line_measure(char *string, size_t len, int pel_size, int *outH);
+RCK_EXPORT void rck_fallback_text_line_draw(pixman_image_t *image, pixman_image_t *source, char *string, size_t len, int pel_size, int x, int y);
+RCK_EXPORT RCKFallbackGlyph *rck_fallback_text_line_rasterize(char *string, size_t len, int pel_size);
+RCK_EXPORT void rck_fallback_text_free_glyphs(RCKFallbackGlyph *glyphs);
 
 /* TODO: Move fallback toolkit PR into here */
 /* TODO: Metatoolkit (QT/GTK/Fallback) wrapper */

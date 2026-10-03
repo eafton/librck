@@ -20,6 +20,7 @@ PRBool rck_init(void) {
 void rck_deinit(void) {
 	if (ok) {
 		irck_xpm_deinit();
+		irck_fallback_text_deinit();
 		PR_Cleanup();
 	}
 }

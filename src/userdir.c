@@ -28,7 +28,7 @@ static void strip_quotes(char *str) {
     }
 }
 
-static void map_value(XCKXDGUDCache *ud, struct ini_cfgobj *ini, RCKXDGUDDirectory d, char *k) {
+static void map_value(RCKXDGUDCache *ud, struct ini_cfgobj *ini, RCKXDGUDDirectory d, char *k) {
 	struct value_obj *vobj;
 	int rc;
 
@@ -54,7 +54,7 @@ static void map_value(XCKXDGUDCache *ud, struct ini_cfgobj *ini, RCKXDGUDDirecto
     } 
 }
 
-static void load_ini_values(XCKXDGUDCache *ud, char *path) {
+static void load_ini_values(RCKXDGUDCache *ud, char *path) {
     struct ini_cfgobj *ini;
     struct ini_cfgfile *file;
     
@@ -76,13 +76,13 @@ static void load_ini_values(XCKXDGUDCache *ud, char *path) {
 	ini_config_destroy(ini);	
 }
 
-XCKXDGUDCache *rck_xdg_ud_cache_new(RCKXDGBDCache *bdcache) {
-	XCKXDGUDCache *ud;
+RCKXDGUDCache *rck_xdg_ud_cache_new(RCKXDGBDCache *bdcache) {
+	RCKXDGUDCache *ud;
 	const char **dirs;
 	char *ucfg;
 	unsigned int i, c;
 	
-	ud = PR_NEW(XCKXDGUDCache);
+	ud = PR_NEW(RCKXDGUDCache);
 	if (!ud) {
 		return NULL;
 	}
@@ -121,7 +121,7 @@ XCKXDGUDCache *rck_xdg_ud_cache_new(RCKXDGBDCache *bdcache) {
 	return ud;
 }
 
-const char *rck_xdg_ud_cache_get_path(XCKXDGUDCache *cache, RCKXDGUDDirectory dir) {
+const char *rck_xdg_ud_cache_get_path(RCKXDGUDCache *cache, RCKXDGUDDirectory dir) {
 	if (!cache) {
 		return NULL;
 	}
@@ -129,7 +129,7 @@ const char *rck_xdg_ud_cache_get_path(XCKXDGUDCache *cache, RCKXDGUDDirectory di
 	return cache->dirs[dir];
 }
 
-RCKXDGUDDirectory rck_xdg_ud_cache_get_directory_of_path(XCKXDGUDCache *cache, const char *path) {
+RCKXDGUDDirectory rck_xdg_ud_cache_get_directory_of_path(RCKXDGUDCache *cache, const char *path) {
 	unsigned int i;
 	
 	if (!cache || !path) {
@@ -145,7 +145,7 @@ RCKXDGUDDirectory rck_xdg_ud_cache_get_directory_of_path(XCKXDGUDCache *cache, c
 	return RCK_XDG_UD_INVALID;
 }
 
-void rck_xdg_ud_cache_destroy(XCKXDGUDCache *cache) {
+void rck_xdg_ud_cache_destroy(RCKXDGUDCache *cache) {
 	unsigned int i;
 	
 	if (!cache) {

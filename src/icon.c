@@ -1165,7 +1165,7 @@ pixman_image_t *generate_missing_image(unsigned int size) {
 	}
 }
 
-pixman_image_t *rck_xdg_icon_theme_load_icon(RCKXDGIconTheme *theme, const char *name, unsigned int size, unsigned int scale) {
+pixman_image_t *rck_xdg_icon_theme_load_icon(RCKXDGIconTheme *theme, const char *name, unsigned int size, unsigned int scale, PRBool missing_image) {
 	pixman_image_t *image;
 	magic_t magic;
 	const char *mime;
@@ -1174,7 +1174,11 @@ pixman_image_t *rck_xdg_icon_theme_load_icon(RCKXDGIconTheme *theme, const char 
 	image = NULL;
 	iov.filename = rck_xdg_icon_theme_lookup_icon(theme, name, size, scale);
 	if (!iov.filename) {
-		return generate_missing_image(size*scale);
+		if (missing_image) {
+			return generate_missing_image(size*scale);
+		} else {
+			NULL;
+		}
 	}
 	
 	magic = magic_open(MAGIC_MIME_TYPE); 
@@ -1191,7 +1195,11 @@ pixman_image_t *rck_xdg_icon_theme_load_icon(RCKXDGIconTheme *theme, const char 
 	rck_xdg_icon_theme_free_icon_path(iov.filename);
 	
 	if (!image) {
-		return generate_missing_image(size*scale);
+		if (missing_image) {
+			return generate_missing_image(size*scale);
+		} else {
+			NULL;
+		}
 	}
 	
 	return image;
