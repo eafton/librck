@@ -12,6 +12,7 @@ Implements:
 -Fallback "Unicode" text renderer (uses built in bitmap font)
 
 Planned:
+-Maybe allow disabling features or letting inih be used instead of ding-libs
 -Documentation
 -GIO style "get icon representation of a file system object" API
 -Unicode text renderer (wrapper around FreeType2 +FontConfig + HarfBuzz ala libfcft)
